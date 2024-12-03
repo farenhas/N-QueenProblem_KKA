@@ -51,17 +51,33 @@ def roulette_wheel_selection(population, probabilities):
 
 def print_chessboard(chromosome, generation):
     n = len(chromosome)
+    board_colors = np.zeros((n, n, 3))  # RGB colors for the board
     board = np.zeros((n, n))
+
+    # Create chessboard pattern
+    for i in range(n):
+        for j in range(n):
+            if (i + j) % 2 == 0:
+                board_colors[i, j] = [1, 0.87, 0.67]  # Light color (like beige)
+            else:
+                board_colors[i, j] = [0.65, 0.42, 0.27]  # Dark color (like brown)
+
+    # Place queens
     for i in range(n):
         board[chromosome[i] - 1][i] = 1
 
-    plt.imshow(board, cmap="binary")
+    plt.clf()  # Clear the previous figure
+    plt.imshow(board_colors, extent=[0, n, 0, n])
     plt.xticks(range(n))
     plt.yticks(range(n))
+    plt.grid(color="black", linestyle="-", linewidth=1.5)  # Add grid lines
+    for i in range(n):
+        plt.text(i + 0.5, n - chromosome[i] + 0.5, "♛", ha="center", va="center", fontsize=16, color="black")
     plt.title(f"Generation: {generation}")
-    plt.show()
+    plt.pause(1)  # Pause for 1 second
 
 def genetic_algorithm(population, max_fitness, max_generations, mutation_rate, crossover_rate):
+    plt.ion()  # Enable interactive mode for live updates
     generation = 1
     while generation <= max_generations:
         fitness_values = [calculate_fitness(chromosome, max_fitness) for chromosome in population]
@@ -72,6 +88,7 @@ def genetic_algorithm(population, max_fitness, max_generations, mutation_rate, c
         print_chessboard(best_chromosome, generation)
 
         if sorted_population[0][0] == max_fitness:
+            plt.ioff()  # Disable interactive mode
             return best_chromosome, generation
 
         new_population = [best_chromosome]
@@ -85,11 +102,12 @@ def genetic_algorithm(population, max_fitness, max_generations, mutation_rate, c
         population = new_population
         generation += 1
 
+    plt.ioff()  # Disable interactive mode
     return None, max_generations
 
 if __name__ == "__main__":
     n = int(input("Masukkan ukuran papan catur (n): "))
-    print(f"Masukkan posisi awal ratu (1 hingga {n} atau 0 untuk kosong, dipisahkan spasi):")
+    print(f"Masukkan posisi awal ratu (1 hingga {n}, dipisahkan spasi):")
     initial_queens = list(map(int, input().split()))
 
     if len(initial_queens) != n:
