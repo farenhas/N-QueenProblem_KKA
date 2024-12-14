@@ -140,7 +140,7 @@ if __name__ == "__main__":
     max_generations = None
     mutation_rate = None
     crossover_rate = None
-    initial_queens = None
+    initial_queens = None  # Menyimpan posisi ratu
 
     while True:
         user_input = int(input("Input 1 untuk menginput data baru atau 0 untuk keluar: "))
@@ -152,63 +152,75 @@ if __name__ == "__main__":
                 n = int(input("Masukkan ukuran papan catur (maksimum 8): "))
                 if n > 8:
                     print("Ukuran papan tidak boleh lebih besar dari 8. Silakan coba lagi.")
-                    n = None  # Reset n untuk mengulang input
+                    n = None
                     continue
-                if n < 1:
+                elif n < 1:
                     print("Ukuran papan tidak boleh lebih kecil dari 1. Silakan coba lagi.")
-                    n = None  # Reset n untuk mengulang input
+                    n = None
                     continue
-                else:
-                    break
+                break
 
-                while True:
+        # Cek apakah posisi ratu sudah ada
+        if initial_queens is None:
+            while True:
+                try:
                     initial_queens = list(map(int, input(f"Masukkan posisi awal ratu (1 hingga {n}, dipisahkan spasi): ").split()))
                     if len(initial_queens) != n:
                         print(f"Jumlah kolom harus tepat {n}. Silakan coba lagi.")
                         continue
-                    else:
-                        break
+                    if any(q < 1 or q > n for q in initial_queens):
+                        print(f"Setiap kolom harus berada dalam rentang 1 hingga {n}. Silakan coba lagi.")
+                        continue
+                    break
+                except ValueError:
+                    print("Harap masukkan angka yang valid.")
+        else:
+            print(f"Posisi awal ratu sudah diset: {initial_queens}")
 
-                max_fitness = (n * (n - 1)) // 2
+        print(f"Ukuran papan: {n}")
+        print(f"Posisi awal ratu: {initial_queens}")
 
-            else:
-                print(f"Menggunakan ukuran papan catur (n): {n}")
-                print(f"Menggunakan posisi awal ratu: {initial_queens}")
-            
-            # Input berulang untuk jumlah generasi, mutation rate, dan crossover rate
-            max_generations = int(input("Masukkan jumlah iterasi maksimum: "))
-            mutation_rate = float(input("Masukkan probabilitas mutasi (0.0 hingga 1.0): "))
-            crossover_rate = float(input("Masukkan probabilitas crossover (0.0 hingga 1.0): "))
-            
-            max_mutations = int(input("Masukkan jumlah mutasi maksimum: "))
-            max_crossovers = int(input("Masukkan jumlah crossover maksimum: "))
+        max_fitness = (n * (n - 1)) // 2
 
-            # Sisanya tetap sama
-            population = []
-            for _ in range(population_size):
-                chromosome = initial_queens[:]
-                for i in range(len(chromosome)):
-                    if chromosome[i] == 0:
-                        chromosome[i] = random.randint(1, n)
-                population.append(chromosome)
+        if n and initial_queens:
+            print(f"Menggunakan ukuran papan catur (n): {n}")
+            print(f"Menggunakan posisi awal ratu: {initial_queens}")
+        else:
+            print("Data tidak valid. Periksa kembali input.")
+        
+        # Input berulang untuk jumlah generasi, mutation rate, dan crossover rate
+        max_generations = int(input("Masukkan jumlah iterasi maksimum: "))
+        mutation_rate = float(input("Masukkan probabilitas mutasi (0.0 hingga 1.0): "))
+        crossover_rate = float(input("Masukkan probabilitas crossover (0.0 hingga 1.0): "))
+        
+        max_mutations = int(input("Masukkan jumlah mutasi maksimum: "))
+        max_crossovers = int(input("Masukkan jumlah crossover maksimum: "))
 
-            start_time = time.time()
-            solution, generations = genetic_algorithm(
-                population, max_fitness, max_generations, mutation_rate, crossover_rate,
-                max_mutations, max_crossovers
-            )
-            end_time = time.time()
-            elapsed_time = end_time - start_time
+        # Sisanya tetap sama
+        population = []
+        for _ in range(population_size):
+            chromosome = initial_queens[:]
+            for i in range(len(chromosome)):
+                if chromosome[i] == 0:
+                    chromosome[i] = random.randint(1, n)
+            population.append(chromosome)
 
-            if solution:
-                print(f"Solved in {generations} generations!")
-                print(f"Solution: {solution}")
-                best_solutions.append((solution, generations, elapsed_time, max_mutations, max_crossovers))
-            else:
-                print(f"Unable to solve within {max_generations} generations.")
-                best_solutions.append((None, max_generations, elapsed_time, max_mutations, max_crossovers))
+        start_time = time.time()
+        solution, generations = genetic_algorithm(
+            population, max_fitness, max_generations, mutation_rate, crossover_rate,
+            max_mutations, max_crossovers
+        )
+        end_time = time.time()
+        elapsed_time = end_time - start_time
 
-   
+        if solution:
+            print(f"Solved in {generations} generations!")
+            print(f"Solution: {solution}")
+            best_solutions.append((solution, generations, elapsed_time, max_mutations, max_crossovers))
+        else:
+            print(f"Unable to solve within {max_generations} generations.")
+            best_solutions.append((None, max_generations, elapsed_time, max_mutations, max_crossovers))
+
     if best_solutions:
         best_solution = min([s for s in best_solutions if s[0] is not None], key=lambda x: x[1], default=None)
         if best_solution:
