@@ -152,15 +152,22 @@ if __name__ == "__main__":
                 n = int(input("Masukkan ukuran papan catur (maksimum 8): "))
                 if n > 8:
                     print("Ukuran papan tidak boleh lebih besar dari 8. Silakan coba lagi.")
+                    n = None  # Reset n untuk mengulang input
+                    continue
+                if n < 1:
+                    print("Ukuran papan tidak boleh lebih kecil dari 1. Silakan coba lagi.")
+                    n = None  # Reset n untuk mengulang input
+                    continue
                 else:
                     break
 
-                initial_queens = list(map(int, input(f"Masukkan posisi awal ratu (1 hingga {n}, dipisahkan spasi): ").split()))
-
-                if len(initial_queens) != n:
-                    print(f"Jumlah kolom harus tepat {n}.")
-                    n = None  # Reset nilai n agar pengguna dapat mencoba lagi
-                    continue
+                while True:
+                    initial_queens = list(map(int, input(f"Masukkan posisi awal ratu (1 hingga {n}, dipisahkan spasi): ").split()))
+                    if len(initial_queens) != n:
+                        print(f"Jumlah kolom harus tepat {n}. Silakan coba lagi.")
+                        continue
+                    else:
+                        break
 
                 max_fitness = (n * (n - 1)) // 2
 
