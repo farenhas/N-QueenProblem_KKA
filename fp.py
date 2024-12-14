@@ -147,26 +147,36 @@ if __name__ == "__main__":
         if user_input == 0:
             break
 
-        if user_input == 1:
-            if n is None:
-                n = int(input("Masukkan ukuran papan catur (n): "))
+        if n is None:
+            while True:
+                n = int(input("Masukkan ukuran papan catur (maksimum 8): "))
+                if n > 8:
+                    print("Ukuran papan tidak boleh lebih besar dari 8. Silakan coba lagi.")
+                else:
+                    break
+
                 initial_queens = list(map(int, input(f"Masukkan posisi awal ratu (1 hingga {n}, dipisahkan spasi): ").split()))
 
                 if len(initial_queens) != n:
                     print(f"Jumlah kolom harus tepat {n}.")
+                    n = None  # Reset nilai n agar pengguna dapat mencoba lagi
                     continue
 
                 max_fitness = (n * (n - 1)) // 2
-                max_generations = int(input("Masukkan jumlah iterasi maksimum: "))
-                mutation_rate = float(input("Masukkan probabilitas mutasi (0.0 hingga 1.0): "))
-                crossover_rate = float(input("Masukkan probabilitas crossover (0.0 hingga 1.0): "))
+
             else:
                 print(f"Menggunakan ukuran papan catur (n): {n}")
                 print(f"Menggunakan posisi awal ratu: {initial_queens}")
-
+            
+            # Input berulang untuk jumlah generasi, mutation rate, dan crossover rate
+            max_generations = int(input("Masukkan jumlah iterasi maksimum: "))
+            mutation_rate = float(input("Masukkan probabilitas mutasi (0.0 hingga 1.0): "))
+            crossover_rate = float(input("Masukkan probabilitas crossover (0.0 hingga 1.0): "))
+            
             max_mutations = int(input("Masukkan jumlah mutasi maksimum: "))
             max_crossovers = int(input("Masukkan jumlah crossover maksimum: "))
 
+            # Sisanya tetap sama
             population = []
             for _ in range(population_size):
                 chromosome = initial_queens[:]
