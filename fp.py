@@ -129,6 +129,9 @@ def genetic_algorithm(population, max_fitness, max_generations, mutation_rate, c
     plt.show()
     return None, max_generations
 
+def calculate_score(generations, time_taken, w1=1, w2=1):
+    return w1 * generations + w2 * time_taken
+
 if __name__ == "__main__":
     best_solutions = []
     n = None
@@ -204,13 +207,28 @@ if __name__ == "__main__":
             status = "Solved" if sol else "Not Solved"
             print(f"Percobaan {idx + 1}: {status} dalam {gen} generasi, waktu {time_taken:.2f} detik, mutasi maksimum: {mutations}, crossover maksimum: {crossovers}")
         
+        
         solved_solutions = [s for s in best_solutions if s[0] is not None]
         if solved_solutions:
+            best_generation_solution = min(solved_solutions, key=lambda x: x[1])
             fastest_solution = min(solved_solutions, key=lambda x: x[2])
+            best_scored_solution = min(
+                solved_solutions, 
+                key=lambda x: calculate_score(x[1], x[2], w1=1, w2=1)
+            )
             print("\nKesimpulan:")
-            print(f"Jumlah mutasi terbaik: {fastest_solution[3]}, Jumlah crossover terbaik: {fastest_solution[4]}")
-            print(f"Hasil tercepat ditemukan dalam waktu {fastest_solution[2]:.2f} detik dengan {fastest_solution[1]} generasi.")
-            print(f"Solusi terbaik: {fastest_solution[0]}")
+            print(f"Solusi dengan generasi terbaik:")
+            print(f"  Solusi: {best_generation_solution[0]} dalam {best_generation_solution[1]} generasi")
+            print(f"  Waktu: {best_generation_solution[2]:.2f} detik")
+            
+            print(f"\nSolusi tercepat:")
+            print(f"  Solusi: {fastest_solution[0]} ditemukan dalam {fastest_solution[2]:.2f} detik")
+            print(f"  Generasi: {fastest_solution[1]}")
+
+            print(f"\nSolusi terbaik berdasarkan skor (w1=1, w2=1):")
+            print(f"  Solusi: {best_scored_solution[0]} dalam {best_scored_solution[1]} generasi")
+            print(f"  Waktu: {best_scored_solution[2]:.2f} detik")
+            print(f"  Skor: {calculate_score(best_scored_solution[1], best_scored_solution[2])}")
         else:
             print("\nTidak ada solusi yang berhasil ditemukan untuk dibandingkan.")
     else:

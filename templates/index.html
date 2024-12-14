@@ -3,84 +3,284 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Genetic Algorithm - N Queens</title>
+    <title>Genetic Algorithm for N-Queens</title>
+</head>
+<body>
+    <h1>Genetic Algorithm for N-Queens Problem</h1>
+    
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            background-color: #f4f7fa;
+            margin: 0;
             padding: 0;
-            background-color: #f9f9f9;
         }
+    
         h1 {
             text-align: center;
+            color: #333;
+            margin-top: 20px;
         }
-        form {
-            margin: 0 auto;
+    
+        #algorithm-form {
             max-width: 600px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        label {
+    
+        #algorithm-form label {
+            font-weight: bold;
+            margin-bottom: 5px;
             display: block;
-            margin-top: 10px;
         }
-        input, button {
+    
+        #algorithm-form input {
             width: 100%;
             padding: 10px;
-            margin: 5px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
         }
-        button {
-            background-color: #28a745;
-            color: white;
+    
+        #algorithm-form button {
+            padding: 12px 20px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
         }
-        button:hover {
-            background-color: #218838;
+    
+        #algorithm-form button:hover {
+            background-color: #0056b3;
         }
-        .result img {
-            max-width: 100%;
+    
+        #result {
+            max-width: 600px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+    
+        #result h3 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+    
+        #result h4 {
+            font-size: 20px;
+            color: #333;
+            margin-top: 15px;
+        }
+    
+        #result p {
+            font-size: 16px;
+            color: #555;
+            line-height: 1.6;
+        }
+    
+        hr {
+            border: 0;
+            border-top: 1px solid #ddd;
+            margin: 20px 0;
+        }
+    
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+    
+            #algorithm-form {
+                width: 100%;
+                padding: 15px;
+            }
+    
+            #result {
+                width: 100%;
+                padding: 15px;
+            }
         }
     </style>
-</head>
-<body>
-    <h1>Genetic Algorithm - N Queens</h1>
-    <form action="/" method="post">
-        <label for="n">Ukuran Papan Catur (n):</label>
-        <input type="number" id="n" name="n" required>
 
-        <label for="queens">Posisi Awal Ratu (pisahkan dengan spasi):</label>
-        <input type="text" id="queens" name="queens" required>
+    <form id="algorithm-form">
+        <label for="n">Size of Board (n):</label>
+        <input type="number" id="n" name="n" required><br><br>
 
-        <label for="generations">Jumlah Iterasi Maksimum:</label>
-        <input type="number" id="generations" name="generations" required>
+        <label for="initial_queens">Initial Queens (space-separated positions, 0 for empty):</label>
+        <input type="text" id="initial_queens" name="initial_queens" required><br><br>
 
-        <label for="mutation_rate">Probabilitas Mutasi (0.0 - 1.0):</label>
-        <input type="number" step="0.01" id="mutation_rate" name="mutation_rate" required>
+        <label for="max_generations">Max Generations:</label>
+        <input type="number" id="max_generations" name="max_generations" required><br><br>
 
-        <label for="crossover_rate">Probabilitas Crossover (0.0 - 1.0):</label>
-        <input type="number" step="0.01" id="crossover_rate" name="crossover_rate" required>
+        <label for="mutation_rate">Mutation Rate (0.0 to 1.0):</label>
+        <input type="number" step="0.01" id="mutation_rate" name="mutation_rate" required><br><br>
 
-        <label for="max_mutations">Jumlah Mutasi Maksimum:</label>
-        <input type="number" id="max_mutations" name="max_mutations" required>
+        <label for="crossover_rate">Crossover Rate (0.0 to 1.0):</label>
+        <input type="number" step="0.01" id="crossover_rate" name="crossover_rate" required><br><br>
 
-        <label for="max_crossovers">Jumlah Crossover Maksimum:</label>
-        <input type="number" id="max_crossovers" name="max_crossovers" required>
+        <label for="max_mutations">Max Mutations:</label>
+        <input type="number" id="max_mutations" name="max_mutations" required><br><br>
 
-        <button type="submit">Mulai Algoritma</button>
+        <label for="max_crossovers">Max Crossovers:</label>
+        <input type="number" id="max_crossovers" name="max_crossovers" required><br><br>
+
+        <button type="submit">Run Algorithm</button>
     </form>
 
-    {% if result %}
-        <div class="result">
-            <h2>Hasil:</h2>
-            {% if result.solved %}
-                <p>Solusi ditemukan dalam {{ result.generations }} generasi.</p>
-                <p>Solusi: {{ result.solution }}</p>
-                <p>Waktu eksekusi: {{ result.time }} detik</p>
-                <img src="{{ url_for('static', filename='solution.png') }}" alt="Solusi Papan Catur">
-            {% else %}
-                <p>Tidak ada solusi ditemukan dalam {{ result.generations }} generasi.</p>
-            {% endif %}
-        </div>
-    {% endif %}
+    <div id="result"></div>
+
+    <script>
+        let previousInputs = {}; // To store user inputs temporarily
+        let allResults = []; // To accumulate all results from each input trial
+    
+        document.getElementById('algorithm-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+    
+            // Collect form data
+            const formData = new FormData(this);
+            const data = new URLSearchParams(formData);
+            previousInputs = {
+                n: data.get('n'),
+                initial_queens: data.get('initial_queens'),
+                max_generations: data.get('max_generations'),
+                mutation_rate: data.get('mutation_rate'),
+                crossover_rate: data.get('crossover_rate'),
+                max_mutations: data.get('max_mutations'),
+                max_crossovers: data.get('max_crossovers')
+            };
+    
+            // Run the algorithm initially
+            const result = await runAlgorithm(data);
+    
+            // Store the result for later display
+            allResults.push(result);
+    
+            // Ask the user if they want to continue inputting
+            const continueInput = confirm('Do you want to continue inputting?');
+    
+            if (continueInput) {
+                // Ask for max_mutations and max_crossovers
+                const maxMutations = prompt('Enter Max Mutations (previous: ' + previousInputs.max_mutations + ')', previousInputs.max_mutations);
+                const maxCrossovers = prompt('Enter Max Crossovers (previous: ' + previousInputs.max_crossovers + ')', previousInputs.max_crossovers);
+                
+                // Update previousInputs with the new values
+                previousInputs.max_mutations = maxMutations;
+                previousInputs.max_crossovers = maxCrossovers;
+    
+                // Prepare new form data with updated values
+                const newFormData = new FormData();
+                for (let key in previousInputs) {
+                    newFormData.append(key, previousInputs[key]);
+                }
+    
+                // Re-run the algorithm with the updated values
+                const newResult = await runAlgorithm(newFormData);
+    
+                // Store the new result for later display
+                allResults.push(newResult);
+    
+                // Ask again if the user wants to continue
+                const continueInputAgain = confirm('Do you want to continue inputting?');
+                if (continueInputAgain) {
+                    // Repeat the process if user chooses to continue
+                    document.getElementById('algorithm-form').submit();
+                } else {
+                    // If user chooses not to continue, show all accumulated results
+                    displayAllResults();
+                }
+            } else {
+                // If user chooses not to continue, show all accumulated results
+                displayAllResults();
+            }
+        });
+    
+        // Function to display all accumulated results and conclusion
+        function displayAllResults() {
+            const resultDiv = document.getElementById('result');
+            let resultHTML = '<h3>All Results:</h3>';
+            
+            // Loop through all accumulated results and display them
+            allResults.forEach((result, index) => {
+                resultHTML += `
+                    <h4>Trial ${index + 1}</h4>
+                    <p>Status: ${result.status}</p>
+                    <p>Solution: ${result.solution}</p>
+                    <p>Generations: ${result.generations}</p>
+                    <p>Time Taken: ${result.time} seconds</p>
+                    <p>Max Mutations: ${result.mutation_rate}</p>
+                    <p>Max Crossovers: ${result.crossover_rate}</p>
+                    <hr>
+                `;
+            });
+    
+            // Find the best trial (based on the best fitness or any other criteria)
+            const bestTrial = getBestTrial();
+            resultHTML += `<h3>Conclusion:</h3>
+                           <p>The best trial is Trial ${bestTrial.index + 1}.</p>
+                           <p>Generations: ${bestTrial.generations}</p>
+                           <p>Solution: ${bestTrial.solution}</p>
+                           <p>Time Taken: ${bestTrial.time} seconds</p>
+                           <p>Max Mutations: ${bestTrial.mutation_rate}</p>
+                           <p>Max Crossovers: ${bestTrial.crossover_rate}</p>`;
+    
+            resultDiv.innerHTML = resultHTML;
+        }
+    
+        // Function to determine the best trial
+        function getBestTrial() {
+            let bestTrial = null;
+            let bestTime = Infinity; // Start with a very high value for comparison
+    
+            allResults.forEach((result, index) => {
+                // We want to select the solved trial with the least time
+                if (result.status === 'Solved' && result.time < bestTime) {
+                    bestTime = result.time;
+                    bestTrial = { 
+                        index,
+                        generations: result.generations,
+                        solution: result.solution,
+                        time: result.time,
+                        mutation_rate: result.mutation_rate,
+                        crossover_rate: result.crossover_rate
+                    };
+                }
+            });
+    
+            // If no trial met the criteria (e.g., no solution found), fallback
+            if (!bestTrial) {
+                bestTrial = { 
+                    index: allResults.length - 1, 
+                    generations: 'N/A',
+                    solution: 'No solution found',
+                    time: 'N/A',
+                    mutation_rate: 'N/A',
+                    crossover_rate: 'N/A'
+                };
+            }
+    
+            return bestTrial;
+        }
+    
+        // Function to run the algorithm
+        async function runAlgorithm(data) {
+            const response = await fetch('/run_algorithm', {
+                method: 'POST',
+                body: data
+            });
+    
+            const result = await response.json();
+            return result;
+        }
+    </script>               
+    
 </body>
 </html>
