@@ -1,30 +1,28 @@
 from flask import Flask, render_template, request, jsonify
 import random
 import time
-import matplotlib.pyplot as plt
 import numpy as np
-from io import BytesIO
+import matplotlib
+matplotlib.use('Agg') 
+import matplotlib.pyplot as plt
+import io
 import base64
 
 app = Flask(__name__)
 
-# Your genetic algorithm functions here (the same as in your code)
+# Keep your existing algorithm functions here
 def calculate_fitness(chromosome, max_fitness):
     n = len(chromosome)
-
     horizontal_collisions = sum([chromosome.count(queen) - 1 for queen in chromosome]) // 2
-
     left_diagonal = [0] * (2 * n - 1)
     right_diagonal = [0] * (2 * n - 1)
     for i in range(n):
         left_diagonal[i + chromosome[i] - 1] += 1
         right_diagonal[n - i + chromosome[i] - 2] += 1
-
     diagonal_collisions = 0
     for count in left_diagonal + right_diagonal:
         if count > 1:
             diagonal_collisions += count - 1
-
     return max_fitness - (horizontal_collisions + diagonal_collisions)
 
 def crossover(x, y, crossover_rate, max_crossovers, current_crossovers):
@@ -33,7 +31,6 @@ def crossover(x, y, crossover_rate, max_crossovers, current_crossovers):
         child = [0] * n
         for i in range(n):
             child[i] = x[i] if random.random() > 0.5 else y[i]
-        
         current_crossovers[0] += 1
         return child
     return x
@@ -45,7 +42,6 @@ def mutate(chromosome, mutation_rate, max_mutations, current_mutations):
         value = random.randint(1, n)
         chromosome[index] = value
         current_mutations[0] += 1
-    
     return chromosome
 
 def roulette_wheel_selection(population, probabilities):
@@ -58,12 +54,11 @@ def roulette_wheel_selection(population, probabilities):
         upto += probability
     return population[-1]
 
-def print_chessboard(chromosome, generation):
-    
+def generate_chessboard_image(chromosome, generation):
     n = len(chromosome)
     board_colors = np.zeros((n, n, 3))
-    board = np.zeros((n, n))
-
+    
+    # Create chessboard pattern
     for i in range(n):
         for j in range(n):
             if (i + j) % 2 == 0:
@@ -71,29 +66,34 @@ def print_chessboard(chromosome, generation):
             else:
                 board_colors[i, j] = [0.65, 0.42, 0.27]
 
-    for i in range(n):
-        board[chromosome[i] - 1][i] = 1
-
-    plt.clf()
+    plt.figure(figsize=(8, 8))
     plt.imshow(board_colors, extent=[0, n, 0, n])
     plt.xticks(range(n))
     plt.yticks(range(n))
     plt.grid(color="black", linestyle="-", linewidth=1.5)
+    
+    # Place queens
     for i in range(n):
-        plt.text(i + 0.5, n - chromosome[i] + 0.5, "♛", ha="center", va="center", fontsize=16, color="black")
+        plt.text(i + 0.5, n - chromosome[i] + 0.5, "♛", 
+                ha="center", va="center", fontsize=16, color="black")
+    
     plt.title(f"Generation: {generation}")
-    plt.pause(0.1)
+    
+    # Save plot to bytes buffer
+    buf = io.BytesIO()
+    plt.savefig(buf, format='png')
+    plt.close()
+    buf.seek(0)
+    return base64.b64encode(buf.getvalue()).decode('utf-8')
 
-def genetic_algorithm(population, max_fitness, max_generations, mutation_rate, crossover_rate, max_mutations, max_crossovers):
-    
-    plt.ion()
+def genetic_algorithm(population, max_fitness, max_generations, mutation_rate, 
+                     crossover_rate, max_mutations, max_crossovers):
     generation = 1
-    
     current_mutations = [0]
     current_crossovers = [0]
-    
     best_fitness = 0
     stagnation_count = 0
+    solutions = []
     
     while generation <= max_generations:
         fitness_values = [calculate_fitness(chromosome, max_fitness) for chromosome in population]
@@ -102,7 +102,14 @@ def genetic_algorithm(population, max_fitness, max_generations, mutation_rate, c
 
         best_chromosome = sorted_population[0][1]
         current_best_fitness = sorted_population[0][0]
-        print_chessboard(best_chromosome, generation)
+        
+        # Save current state
+        solutions.append({
+            'generation': generation,
+            'chromosome': best_chromosome,
+            'fitness': current_best_fitness,
+            'image': generate_chessboard_image(best_chromosome, generation)
+        })
 
         if current_best_fitness > best_fitness:
             best_fitness = current_best_fitness
@@ -111,9 +118,7 @@ def genetic_algorithm(population, max_fitness, max_generations, mutation_rate, c
             stagnation_count += 1
 
         if current_best_fitness == max_fitness:
-            plt.ioff()
-            plt.show()
-            return best_chromosome, generation
+            return best_chromosome, generation, solutions
         
         if stagnation_count > 10:
             max_mutations *= 2
@@ -133,27 +138,27 @@ def genetic_algorithm(population, max_fitness, max_generations, mutation_rate, c
         population = new_population
         generation += 1
 
-    plt.ioff()
-    plt.show()
-    return None, max_generations
+    return None, max_generations, solutions
 
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/run_algorithm', methods=['POST'])
-def run_algorithm():
-    n = int(request.form['n'])
-    initial_queens = list(map(int, request.form['initial_queens'].split()))
-    max_generations = int(request.form['max_generations'])
-    mutation_rate = float(request.form['mutation_rate'])
-    crossover_rate = float(request.form['crossover_rate'])
-    max_mutations = int(request.form['max_mutations'])
-    max_crossovers = int(request.form['max_crossovers'])
+@app.route('/solve', methods=['POST'])
+def solve():
+    data = request.get_json()
     
-    max_fitness = (n * (n - 1)) // 2
+    # Get parameters from request
+    n = int(data['boardSize'])
+    initial_queens = list(map(int, data['initialQueens'].split()))
+    max_generations = int(data['maxGenerations'])
+    mutation_rate = float(data['mutationRate'])
+    crossover_rate = float(data['crossoverRate'])
+    max_mutations = int(data['maxMutations'])
+    max_crossovers = int(data['maxCrossovers'])
+    
+    # Initialize population
     population_size = 800
-    
     population = []
     for _ in range(population_size):
         chromosome = initial_queens[:]
@@ -162,27 +167,26 @@ def run_algorithm():
                 chromosome[i] = random.randint(1, n)
         population.append(chromosome)
 
+    max_fitness = (n * (n - 1)) // 2
+    
+    # Run genetic algorithm
     start_time = time.time()
-    solution, generations = genetic_algorithm(
+    solution, generations, solutions_history = genetic_algorithm(
         population, max_fitness, max_generations, mutation_rate, crossover_rate,
         max_mutations, max_crossovers
     )
     end_time = time.time()
     elapsed_time = end_time - start_time
-
-    if solution:
-        status = 'Solved'
-    else:
-        status = 'Not Solved'
-
-    return jsonify({
-        'status': status,
+    
+    result = {
+        'success': solution is not None,
         'solution': solution,
         'generations': generations,
-        'time': round(elapsed_time, 2),
-        'mutation_rate': max_mutations,
-        'crossover_rate': max_crossovers
-    })
-
+        'elapsed_time': round(elapsed_time, 2),
+        'solutions_history': solutions_history
+    }
+    
+    return jsonify(result)
+        
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5001, threaded=False)
